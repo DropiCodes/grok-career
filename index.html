@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal de Carrera IA - Grok 4 Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+       
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .bg-vibrant { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #0284c7 100%); }
+        .ai-card { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%); }
+        .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(16px); border: 1px solid rgba(226,232,240,0.85); }
+        .tab-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-btn.active { background-color: #2563eb; color: white; box-shadow: 0 10px 15px -3px rgb(37 99 235 / 0.3); }
+        .mobile-scroll::-webkit-scrollbar { width: 4px; }
+        .mobile-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 20px; }
+        @media (max-width: 640px) {
+            .glass-card { border-radius: 20px; }
+            .tab-btn { padding: 12px 16px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900">
+
+    <!-- HEADER MÓVIL -->
+    <header class="bg-vibrant text-white sticky top-0 z-50 shadow-xl">
+        <div class="max-w-full mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-500 text-slate-950 text-[10px] font-black px-3 py-1 rounded-full">Grok 4</span>
+                <span class="bg-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full">MÓVIL READY</span>
+            </div>
+            <h1 class="text-xl font-black tracking-tighter">Grok Career</h1>
+            <button onclick="toggleMenu()" class="text-2xl">☰</button>
+        </div>
+    </header>
+
+    <!-- MENÚ MÓVIL -->
+    <div id="mobile-menu" class="hidden fixed inset-0 bg-slate-900/95 z-50 pt-20 px-6">
+        <div class="space-y-4 text-lg">
+            <a onclick="toggleMenu()" class="block py-4">🏠 Inicio</a>
+            <a onclick="toggleMenu()" class="block py-4">🔍 Búsqueda de Vacantes</a>
+            <a onclick="toggleMenu()" class="block py-4">🤖 IA Assistant</a>
+            <a onclick="toggleMenu()" class="block py-4">📊 Sueldos</a>
+            <a onclick="toggleMenu()" class="block py-4 text-violet-400">Consejo Grok</a>
+        </div>
+    </div>
+
+    <main class="max-w-full mx-auto px-4 py-6">
+
+        <!-- CONFIGURACIÓN -->
+        <section class="bg-white rounded-3xl shadow p-5 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-black flex items-center gap-2">🔍 Tu Configuración</h2>
+                <button onclick="alert('¡Consejo Grok activado! 🎯')" 
+                        class="bg-violet-600 text-white text-xs font-bold px-4 py-2 rounded-2xl flex items-center gap-2">
+                    🤖 Grok Consejo
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">EMPRESA</label>
+                    <select id="global-company-select" onchange="onFilterChange()" 
+                            class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2">
+                        <option value="TODAS">-- Todas las Empresas --</option>
+                        <option value="Grupo Foriba">Grupo Foriba</option>
+                        <option value="FEMSA / OXXO">FEMSA / OXXO</option>
+                        <option value="Mercado Libre">Mercado Libre</option>
+                        <option value="OTRA">Otra Empresa</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">CARGO</label>
+                    <select id="global-role-select" onchange="onFilterChange()" 
+                            class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2">
+                        <option value="TODOS">-- Todos los Cargos --</option>
+                        <option value="Auxiliar Contable">Auxiliar Contable</option>
+                        <option value="Vendedor de Campo">Vendedor de Campo</option>
+                        <option value="OTRO">Otro Cargo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">UBICACIÓN</label>
+                    <input id="global-location-input" type="text" value="Tulancingo, Hidalgo" 
+                           oninput="onFilterChange()" 
+                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm">
+                </div>
+            </div>
+        </section>
+
+        <!-- VACANTES -->
+        <section class="bg-white rounded-3xl shadow p-5 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-black">💼 Vacantes en tu zona</h2>
+                <button onclick="searchLiveJobsByCity()" 
+                        class="bg-emerald-600 text-white text-xs font-bold px-5 py-2.5 rounded-2xl flex items-center gap-2">
+                    🌐 Buscar en vivo
+                </button>
+            </div>
+            <div id="vacancies-grid" class="grid grid-cols-1 gap-4">
+                <!-- Vacantes se llenan con JS -->
+            </div>
+        </section>
+
+        <!-- SUITE IA (TODOS LOS PANELLES) -->
+        <section class="ai-card text-white rounded-3xl p-5 mb-6">
+            <div class="flex gap-2 overflow-x-auto pb-3 -mx-5 px-5 mb-6" id="ai-tabs">
+                <button onclick="switchAiTab('cv')" class="tab-btn active px-6 py-3 rounded-2xl text-sm whitespace-nowrap">📄 CV</button>
+                <button onclick="switchAiTab('interview')" class="tab-btn px-6 py-3 rounded-2xl text-sm whitespace-nowrap">🎙️ Entrevista</button>
+                <button onclick="switchAiTab('pitch')" class="tab-btn px-6 py-3 rounded-2xl text-sm whitespace-nowrap">💬 Pitch</button>
+                <button onclick="switchAiTab('quiz')" class="tab-btn px-6 py-3 rounded-2xl text-sm whitespace-nowrap">📝 Test</button>
+                <button onclick="switchAiTab('letter')" class="tab-btn px-6 py-3 rounded-2xl text-sm whitespace-nowrap">✉️ Carta</button>
+            </div>
+
+            <!-- PANEL CV -->
+            <div id="ai-panel-cv" class="ai-panel">
+                <div class="space-y-4">
+                    <textarea id="cv-input-text" rows="5" placeholder="Pega aquí tu CV (puedes usar el formato que quieras)..."
+                              class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm text-white resize-y"></textarea>
+                    <button onclick="analyzeCV()" 
+                            class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm">
+                        ✨ Evaluar con Gemini
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL ENTREVISTA -->
+            <div id="ai-panel-interview" class="ai-panel hidden">
+                <div class="space-y-4">
+                    <textarea id="interview-input" rows="4" placeholder="Describe el puesto o empresa para practicar la entrevista..."
+                              class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm text-white resize-y"></textarea>
+                    <button onclick="analyzeInterview()" 
+                            class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm">
+                        🎙️ Practicar entrevista
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL PITCH -->
+            <div id="ai-panel-pitch" class="ai-panel hidden">
+                <div class="space-y-4">
+                    <textarea id="pitch-input" rows="4" placeholder="Describe tu experiencia para generar un pitch de 30 segundos..."
+                              class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm text-white resize-y"></textarea>
+                    <button onclick="analyzePitch()" 
+                            class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm">
+                        💬 Generar pitch profesional
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL TEST -->
+            <div id="ai-panel-quiz" class="ai-panel hidden">
+                <div class="space-y-4">
+                    <textarea id="quiz-input" rows="4" placeholder="Describe el puesto y te doy un quiz de 10 preguntas..."
+                              class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm text-white resize-y"></textarea>
+                    <button onclick="generateQuiz()" 
+                            class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm">
+                        📝 Generar test
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL CARTA -->
+            <div id="ai-panel-letter" class="ai-panel hidden">
+                <div class="space-y-4">
+                    <textarea id="letter-input" rows="4" placeholder="Describe el puesto y tu experiencia para generar la carta de motivación..."
+                              class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm text-white resize-y"></textarea>
+                    <button onclick="generateLetter()" 
+                            class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm">
+                        ✉️ Generar carta de motivación
+                    </button>
+                </div>
+            </div>
+
+            <!-- CHAT GROK REAL (siempre visible) -->
+            <div class="mt-6 border-t border-slate-700 pt-6">
+                <h3 class="text-lg font-bold mb-3 flex items-center gap-2">🤖 Habla con Grok 4 Edition</h3>
+                <div id="grok-chat" class="h-80 overflow-y-auto bg-slate-900 rounded-2xl p-4 text-sm space-y-4 mb-4"></div>
+                <div class="flex gap-2">
+                    <input id="grok-input" type="text" placeholder="Pregúntale a Grok cualquier cosa sobre tu carrera..." 
+                           class="flex-1 bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                    <button onclick="sendGrokMessage()" 
+                            class="bg-emerald-500 hover:bg-emerald-600 px-6 rounded-2xl font-bold">
+                        Enviar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- GRÁFICA DE SUELDOS -->
+        <section class="bg-white rounded-3xl shadow p-5">
+            <h2 class="text-lg font-black mb-4">📈 Sueldos Promedio México</h2>
+            <div class="chart-container h-72">
+                <canvas id="salaryComparisonChart"></canvas>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ====================== CONFIGURACIÓN GLOBAL ======================
+        let currentTab = 'cv';
+
+        // ====================== MENÚ MÓVIL ======================
+        function toggleMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // ====================== FILTROS ======================
+        function onFilterChange() {
+            renderVacancies();
+        }
+
+        // ====================== VACANTES (API PÚBLICA) ======================
+        function searchLiveJobsByCity() {
+            const location = document.getElementById('global-location-input').value || "Tulancingo, Hidalgo";
+            const company = document.getElementById('global-company-select').value;
+            const role = document.getElementById('global-role-select').value;
+
+            let url = `https://job-search-api-1.onrender.com/search?location=${encodeURIComponent(location)}`;
+
+            if (company !== "TODAS") url += `&company=${encodeURIComponent(company)}`;
+            if (role !== "TODOS") url += `&role=${encodeURIComponent(role)}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    const grid = document.getElementById('vacancies-grid');
+                    grid.innerHTML = '';
+
+                    if (data.jobs && data.jobs.length > 0) {
+                        data.jobs.forEach(job => {
+                            const card = document.createElement('div');
+                            card.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm";
+                            card.innerHTML = `
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h3 class="font-bold">${job.title}</h3>
+                                        <p class="text-slate-500 text-sm">${job.company}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-emerald-600 font-bold">${job.salary}</p>
+                                        <p class="text-xs text-slate-500">${job.location}</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm mt-3 text-slate-600">${job.description}</p>
+                                <button onclick="window.open('${job.link}', '_blank')" 
+                                        class="mt-4 w-full bg-blue-600 text-white py-3 rounded-2xl text-sm font-bold">
+                                    Ver oferta completa
+                                </button>
+                            `;
+                            grid.appendChild(card);
+                        });
+                    } else {
+                        grid.innerHTML = `<p class="text-center py-8 text-slate-500">No se encontraron vacantes en este momento.</p>`;
+                    }
+                })
+                .catch(() => {
+                    alert("⚠️ No se pudo conectar con la API de vacantes.\n\nUsa los filtros de la configuración.");
+                    renderVacancies();
+                });
+        }
+
+        // ====================== RENDER VACANTES (filtro) ======================
+        function renderVacancies() {
+            searchLiveJobsByCity();
+        }
+
+        // ====================== TABS IA ======================
+        function switchAiTab(tab) {
+            document.querySelectorAll('.ai-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`ai-panel-${tab}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`[onclick="switchAiTab('${tab}')"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            currentTab = tab;
+        }
+
+        // ====================== IA FUNCTIONS ======================
+        function analyzeCV() {
+            const text = document.getElementById('cv-input-text').value.trim();
+            if (!text) return alert("Pega tu CV primero");
+            alert("📄 Analizando CV con Gemini...\n\n¡Listo! (Simulado para móvil)\n\nConsejo Grok: \"Tu experiencia en ventas es muy fuerte, enfócate en números\"");
+            // Aquí iría la llamada real a Gemini (reemplaza con tu clave)
+        }
+
+        function analyzeInterview() {
+            const text = document.getElementById('interview-input').value.trim();
+            if (!text) return alert("Describe el puesto primero");
+            alert("🎙️ Practicando entrevista con Grok...\n\n¡Listo! (Simulado)\n\nEjemplo de respuesta típica para Auxiliar Contable en Grupo Foriba.");
+        }
+
+        function analyzePitch() {
+            const text = document.getElementById('pitch-input').value.trim();
+            if (!text) return alert("Cuéntame tu experiencia");
+            alert("💬 Pitch generado con Grok 4 Edition:\n\n'Con 5 años en ventas en FEMSA/OXXO, he aumentado el volumen de ventas en 28%...'");
+        }
+
+        function generateQuiz() {
+            const text = document.getElementById('quiz-input').value.trim();
+            if (!text) return alert("Describe el puesto");
+            alert("📝 Test de 10 preguntas generado con Grok:\n\n1. ¿Qué es el IVA? ...");
+        }
+
+        function generateLetter() {
+            const text = document.getElementById('letter-input').value.trim();
+            if (!text) return alert("Describe tu experiencia");
+            alert("✉️ Carta de motivación generada con Grok:\n\nEstimado equipo de Mercado Libre, ...");
+        }
+
+        // ====================== CHAT GROK REAL ======================
+        let grokChat = document.getElementById('grok-chat');
+
+        function addGrokMessage(text) {
+            const bubble = document.createElement('div');
+            bubble.className = "max-w-[80%] bg-slate-700 text-white rounded-3xl px-4 py-3";
+            bubble.innerHTML = text;
+            grokChat.appendChild(bubble);
+            grokChat.scrollTop = grokChat.scrollHeight;
+        }
+
+        function sendGrokMessage() {
+            const input = document.getElementById('grok-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addGrokMessage(`<span class="text-blue-400">Tú:</span> ${message}`);
+            input.value = '';
+
+            // Mensaje de ejemplo para demo (en producción usarías la API real de xAI)
+            setTimeout(() => {
+                const respuestas = [
+                    "¡Hola! Soy Grok 4 Edition, tu asistente de carrera. ¿En qué te puedo ayudar hoy?",
+                    "Según la configuración que pusiste (Tulancingo, Auxiliar Contable), te recomiendo postular en Grupo Foriba.",
+                    "Tu CV parece fuerte en ventas. ¿Quieres que te ayude a pulirlo?",
+                    "La entrevista para Auxiliar Contable suele preguntar por IVA y conciliación bancaria. ¿Quieres practicar?"
+                ];
+                const reply = respuestas[Math.floor(Math.random() * respuestas.length)];
+                addGrokMessage(`<span class="text-emerald-400">Grok 4 Edition:</span> ${reply}`);
+            }, 800);
+        }
+
+        // ====================== GRÁFICA SUELDOS ======================
+        function initCharts() {
+            new Chart(document.getElementById('salaryComparisonChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Auxiliar Contable', 'Vendedor de Campo', 'Gerente de Ventas'],
+                    datasets: [{
+                        label: 'Sueldo Promedio México (mensual)',
+                        data: [12800, 18500, 24500],
+                        backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // ====================== INICIO ======================
+        window.onload = () => {
+            renderVacancies();
+            initCharts();
+            switchAiTab('cv');
+            addGrokMessage('<span class="text-emerald-400">Grok 4 Edition:</span> ¡Hola! Soy tu asistente de carrera. ¿En qué te ayudo?');
+        };
+    </script>
+</body>
+</html>
